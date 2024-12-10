@@ -1,5 +1,25 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from torchvision import models, transforms
+
+def train_model(model, num_epochs, train_dataset, learning_rate):
+    criterion = nn.BCELoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    # Training loop
+    for epoch in range(num_epochs):
+        for i, (images, labels) in enumerate(train_loader):
+            # Forward pass
+            images = images.permute(0, 3, 1, 2)
+            outputs = model(images)
+            loss = criterion(outputs, labels.unsqueeze(1))
+
+            # Backward and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 class CNNModel(nn.Module):
     def __init__(self, input_channels=4, input_height=158, input_width=300):
         super(CNNModel, self).__init__()

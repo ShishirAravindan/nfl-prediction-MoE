@@ -5,39 +5,10 @@ import random
 from ..etl.transform_mlp import load_mlp_features
 
 def make_onehot(indicies, total=128):
-    """
-    Convert indicies into one-hot vectors by
-    first creating an identity matrix of shape [total, total],
-    then indexing the appropriate columns of that identity matrix.
-
-    Parameters:
-        `indices` - a numpy array of some shape where
-                    the value in these arrays should correspond to category
-                    indices (e.g. note values between 0-127)
-        `total` - the total number of categories (e.g. total number of notes)
-
-    Returns: a numpy array of one-hot vectors
-        If the `indices` array is shaped (N,)
-           then the returned array will be shaped (N, total)
-        If the `indices` array is shaped (N, D)
-           then the returned array will be shaped (N, D, total)
-        ... and so on.
-    """
     I = np.eye(total)
     return I[indicies]
 
 def softmax(z):
-    """
-    Compute the softmax of vector z, or row-wise for a matrix z.
-    For numerical stability, subtract the maximum logit value from each
-    row prior to exponentiation (see above).
-
-    Parameters:
-        `z` - a numpy array of shape (K,) or (N, K)
-
-    Returns: a numpy array with the same shape as `z`, with the softmax
-        activation applied to each row of `z`
-    """
     m = np.amax(z, axis=-1, keepdims=True)
     return np.exp(z - m) / np.sum(np.exp(z - m), axis=-1, keepdims=True)
 
@@ -54,21 +25,6 @@ def tanh_prime(m):
   return 1 - np.tanh(m)**2
 
 def do_forward_pass(model, X):
-    """
-    Compute the forward pass to produce prediction for inputs.
-
-    This function also keeps some of the intermediate values in
-    the neural network computation, to make computing gradients easier.
-
-    For the ReLU activation, you may find the function `np.maximum` helpful
-
-    Parameters:
-        `model` - An instance of the class MLPModel
-        `X` - A numpy array of shape (N, model.num_features)
-
-    Returns: A numpy array of predictions of shape (N, model.num_classes)
-    """
-
     model.N = X.shape[0]
     model.X = X
 
@@ -86,20 +42,6 @@ def do_forward_pass(model, X):
     return model.y
 
 def do_backward_pass(model, ts):
-    """
-    Compute the backward pass, given the ground-truth, one-hot targets.
-
-    You may assume that `model.forward()` has been called for the
-    corresponding input `X`, so that the quantities computed in the
-    `forward()` method is accessible.
-
-    The member variables you store here will be used in the `update()`
-    method. Check that the shapes match what you wrote in Part 2.
-
-    Parameters:
-        `model` - An instance of the class MLPModel
-        `ts` - A numpy array of shape (N, model.num_classes)
-    """
 
     model.z_bar = model.y - ts
     model.W4_bar = np.dot(model.h3.T, model.z_bar) / model.N
@@ -127,25 +69,6 @@ def train_sgd(model, X_train, t_train,
               alpha=0.1, n_epochs=0, batch_size=100,
               X_valid=None, t_valid=None,
               w_init=None, plot=True):
-    '''
-    Given `model` - an instance of MLPModel
-          `X_train` - the data matrix to use for training
-          `t_train` - the target vector to use for training
-          `alpha` - the learning rate.
-                    From our experiments, it appears that a larger learning rate
-                    is appropriate for this task.
-          `n_epochs` - the number of **epochs** of gradient descent to run
-          `batch_size` - the size of each mini batch
-          `X_valid` - the data matrix to use for validation (optional)
-          `t_valid` - the target vector to use for validation (optional)
-          `w_init` - the initial `w` vector (if `None`, use a vector of all zeros)
-          `plot` - whether to track statistics and plot the training curve
-
-    Solves for model weights via stochastic gradient descent,
-    using the provided batch_size.
-
-    Return weights after `niter` iterations.
-    '''
     # as before, initialize all the weights to zeros
     w = np.zeros(X_train.shape[1])
 
@@ -252,46 +175,15 @@ class MLPModel(object):
         self.b4 = np.random.normal(0, 2/self.num_hidden, self.b4.shape)
 
     def forward(self, X):
-        """
-        Compute the forward pass to produce prediction for inputs.
-
-        Parameters:
-            `X` - A numpy array of shape (N, self.num_features)
-
-        Returns: A numpy array of predictions of shape (N, self.num_classes)
-        """
-        return do_forward_pass(self, X) # To be implemented below
+        return do_forward_pass(self, X)
 
     def backward(self, ts):
-        """
-        Compute the backward pass, given the ground-truth, one-hot targets.
-
-        You may assume that the `forward()` method has been called for the
-        corresponding input `X`, so that the quantities computed in the
-        `forward()` method is accessible.
-
-        Parameters:
-            `ts` - A numpy array of shape (N, self.num_classes)
-        """
-        return do_backward_pass(self, ts) # To be implemented below
+        return do_backward_pass(self, ts)
 
     def loss(self, ts):
-        """
-        Compute the average cross-entropy loss, given the ground-truth, one-hot targets.
-
-        You may assume that the `forward()` method has been called for the
-        corresponding input `X`, so that the quantities computed in the
-        `forward()` method is accessible.
-
-        Parameters:
-            `ts` - A numpy array of shape (N, self.num_classes)
-        """
         return np.sum(-ts * np.log(self.y)) / ts.shape[0]
 
     def cleanup(self):
-        """
-        Clear intermediate variables.
-        """
         self.X = None
         self.m1, self.h1 = None, None
         self.m2, self.h2 = None, None
@@ -305,9 +197,6 @@ class MLPModel(object):
         self.W1_bar, self.b1_bar = None, None
 
     def update(self, alpha):
-        """
-        Update parameters using gradient descent.
-        """
         self.W1 -= alpha * self.W1_bar
         self.b1 -= alpha * self.b1_bar
         self.W2 -= alpha * self.W2_bar
