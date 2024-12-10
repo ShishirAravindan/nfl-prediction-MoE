@@ -1,3 +1,5 @@
+KAGGLE_DATASET="nfl-big-data-bowl-2025"
+
 PROJECT_DIR = '/content/drive/.shortcut-targets-by-id/1vcMqu6hVQWEi3qkOsgMGufzBcFhrLLBN/CSC413'
 DATASET_DIR = f'{PROJECT_DIR}/nfl-big-data-bowl-2025/'
 TARGET_FILE_PATH = DATASET_DIR + "features/target.csv"

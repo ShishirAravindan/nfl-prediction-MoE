@@ -2,3 +2,4 @@ nfl-tracks
 pandas
 numpy
 torch
+scikit-learn
