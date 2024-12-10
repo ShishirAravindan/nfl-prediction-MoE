@@ -6,7 +6,6 @@ import torch
 
 from config import *
 
-
 def feature_engineering(df_week):
     # filter for only defensive frames
     df_week = fe_utils.get_offensive_plays(df_week)

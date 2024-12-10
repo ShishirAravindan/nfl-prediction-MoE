@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from config import *
 
 def generate_formation_image(data, gameId, playId, frameId):
+    """Given a single play, generate a formation image."""
     fig, ax = visuals.snap(data, gameId, playId, frameId,
                            fifty_yard=True, size=250, club_colors=CLUB_COLORS)
 
@@ -17,6 +18,8 @@ def generate_formation_image(data, gameId, playId, frameId):
     return image
 
 def get_formation_datapoints(weekNum, TARGETS):
+    """Given a week number and its corresponding targets, 
+    generate a list of datapoints for formation images."""
     week = pd.read_csv(FILES["week"](weekNum))
     vizData = []
 
@@ -37,3 +40,6 @@ def get_formation_datapoints(weekNum, TARGETS):
 
     vizData = np.array(vizData, dtype=object)
     return vizData
+
+def transform_all_formation_images():
+    pass
