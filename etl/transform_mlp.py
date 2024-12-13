@@ -2,7 +2,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 
-from config import *
+from etl.config import *
 
 def convert_to_seconds(time_str):
     minutes, seconds = map(int, time_str.split(':'))

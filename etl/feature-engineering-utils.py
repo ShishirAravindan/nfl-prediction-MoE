@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from config import *
+from etl.config import *
 
 def get_offensive_plays(df_week):
     """Filter such that only offensive frames are considered"""

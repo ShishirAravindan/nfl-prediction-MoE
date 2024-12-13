@@ -3,7 +3,7 @@ import pickle
 import numpy as np
 from nfl import visuals
 import matplotlib.pyplot as plt
-from config import *
+from etl.config import *
 
 def generate_formation_image(data, gameId, playId, frameId):
     """Given a single play, generate a formation image."""

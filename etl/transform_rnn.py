@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import torch
 
-from config import *
+from etl.config import *
 
 def feature_engineering(df_week):
     # filter for only defensive frames
