@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import random
 
-from ..etl.transform_mlp import load_mlp_features
+from etl.transform_mlp import load_mlp_features
 
 def make_onehot(indicies, total=128):
     I = np.eye(total)
@@ -211,7 +211,7 @@ def main():
     model = MLPModel(num_features=X_train.shape[1])
     # Best parameters found using grid search:
     # {'activation': 'tanh', 'alpha': 0.0001, 'hidden_layer_sizes': (50, 50, 50), 'learning_rate': 'constant', 'solver': 'sgd'}
-    train_sgd(model, X_train=X_train, t_train=y_train, X_valid=X_valid, t_valid=y_valid, alpha=0.0001, batch_size=100, n_epochs=30)
+    train_sgd(model, X_train=X_train, t_train=y_train, X_valid=X_valid, t_valid=y_valid, alpha=0.0001, batch_size=100, n_epochs=30, plot=False)
 
 if __name__ == "__main__":
     main()
