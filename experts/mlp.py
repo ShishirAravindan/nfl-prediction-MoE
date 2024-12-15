@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import random
-
+import torch
 from etl.transform_mlp import load_mlp_features
 
 def make_onehot(indicies, total=128):
@@ -128,9 +128,9 @@ def train_sgd(model, X_train, t_train,
         if (X_valid is not None) and (t_valid is not None):
             print("Final Validation Loss:", valid_loss[-1])
 
-class MLPModel(object):
+class GameContextMLP(object):
 
-    def __init__(self, num_features=128*20, num_hidden=50, num_classes=2):
+    def __init__(self, num_features=128*20, num_hidden=50, num_classes=2, pretrained=False):
       """
       Initialize the weights and biases of this multi-layer MLP.
       """
@@ -160,6 +160,16 @@ class MLPModel(object):
 
       # Cleanup intermediate variables
       self.cleanup()
+
+      if pretrained:
+        self.load_pretrained()
+
+    def load_pretrained(self):
+        checkpoint = torch.load(f'../checkpoints/game_context.pth')
+        self.load_state_dict(checkpoint)
+        self.eval()
+        for param in self.parameters():
+            param.requires_grad = False
 
     def initializeParams(self):
         """
@@ -206,12 +216,12 @@ class MLPModel(object):
         self.W4 -= alpha * self.W4_bar
         self.b4 -= alpha * self.b4_bar
 
-def main():
+def train_mlp():
     X_train, y_train, X_test, y_test, X_valid, y_valid = load_mlp_features()
-    model = MLPModel(num_features=X_train.shape[1])
+    model = GameContextMLP(num_features=X_train.shape[1])
     # Best parameters found using grid search:
     # {'activation': 'tanh', 'alpha': 0.0001, 'hidden_layer_sizes': (50, 50, 50), 'learning_rate': 'constant', 'solver': 'sgd'}
     train_sgd(model, X_train=X_train, t_train=y_train, X_valid=X_valid, t_valid=y_valid, alpha=0.0001, batch_size=100, n_epochs=30, plot=False)
 
 if __name__ == "__main__":
-    main()
+    train_mlp()

@@ -3,6 +3,7 @@
 This module implements the individual expert models and gating network for a Mixture of Experts (MoE) architecture. The MoE model combines predictions from three different neural network architectures (CNN, MLP, RNN) using a learned gating network to weight their individual predictions.
 
 ## Architecture Overview
+![MoE Architecture](../demo/architecture.png)
 
 The experts module consists of four main components:
 

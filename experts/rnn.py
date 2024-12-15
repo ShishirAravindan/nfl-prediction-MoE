@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class OffensiveCoordinator(nn.Module):
     def __init__(self, feature_size=8, num_players=11, sequence_size=10, 
-                 hidden_size=128, num_layers=2):
+                 hidden_size=128, num_layers=2, pretrained=False):
         super(OffensiveCoordinator, self).__init__()
         
         self.num_players = num_players
@@ -24,6 +24,9 @@ class OffensiveCoordinator(nn.Module):
 
         # Output layer for binary classification
         self.output_layer = nn.Linear(hidden_size, 1)
+
+        if pretrained:
+            self.load_pretrained()
 
     def forward(self, X):
         """
@@ -47,6 +50,13 @@ class OffensiveCoordinator(nn.Module):
         output = torch.sigmoid(logits)  # Shape: (batch_size, 1)
 
         return output
+    
+    def load_pretrained(self):
+        checkpoint = torch.load(f'../checkpoints/RNNmodel.pth')
+        self.load_state_dict(checkpoint)
+        self.eval()
+        for param in self.parameters():
+            param.requires_grad = False
     
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))

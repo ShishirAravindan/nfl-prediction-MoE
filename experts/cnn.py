@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
-from torchvision import models, transforms
+from torch.utils.data import DataLoader
 
 def train_model(model, num_epochs, train_dataset, learning_rate):
     criterion = nn.BCELoss()
@@ -20,9 +19,10 @@ def train_model(model, num_epochs, train_dataset, learning_rate):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-class CNNModel(nn.Module):
-    def __init__(self, input_channels=4, input_height=158, input_width=300):
-        super(CNNModel, self).__init__()
+
+class FormationExpertCNN(nn.Module):
+    def __init__(self, input_channels=4, input_height=158, input_width=300, pretrained=False):
+        super(FormationExpertCNN, self).__init__()
         # Convolutional layers
         self.conv1 = nn.Conv2d(input_channels, 16, kernel_size=3, stride=1, padding=1)
         self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
@@ -46,6 +46,9 @@ class CNNModel(nn.Module):
 
         # Dropout
         self.dropout = nn.Dropout(0.5)
+
+        if pretrained:
+            self.load_pretrained()
 
     def _get_flatten_size(self, channels, height, width):
         # Simulate forward pass to calculate the size
@@ -73,3 +76,10 @@ class CNNModel(nn.Module):
         # Sigmoid activation for binary classification
         x = torch.sigmoid(x)
         return x
+    
+    def load_pretrained(self):
+        checkpoint = torch.load(f'../checkpoints/CNNmodel.pth')
+        self.load_state_dict(checkpoint)
+        self.eval()
+        for param in self.parameters():
+            param.requires_grad = False
