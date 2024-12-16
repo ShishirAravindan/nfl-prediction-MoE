@@ -11,7 +11,7 @@ def convert_to_seconds(time_str):
 
 def get_features_splits(game_df, play_df, target):    
     # 1. Select relevant pre-snap columns
-    pre_snap_cols = ["gameId", "season", "week", "down", "quarter", "yardsToGo", "yardlineNumber",
+    pre_snap_cols = ["gameId", "playId", "week", "down", "quarter", "yardsToGo", "yardlineNumber",
                  "possessionTeam", "receiverAlignment", "preSnapHomeScore", 'defensiveTeam', 'yardlineSide',
                  "preSnapVisitorScore", "preSnapHomeTeamWinProbability", "pff_runPassOption",
                  "preSnapVisitorTeamWinProbability", "playClockAtSnap", 'target']

@@ -216,6 +216,36 @@ class GameContextMLP(object):
         self.W4 -= alpha * self.W4_bar
         self.b4 -= alpha * self.b4_bar
 
+    def train(self, X_train, t_train, X_valid=None, t_valid=None, 
+              n_epochs=50, batch_size=32, alpha=0.001, plot=True):
+        """
+        Train the MLP using stochastic gradient descent.
+        
+        Args:
+            X_train: Training features
+            t_train: Training targets
+            X_valid: Validation features
+            t_valid: Validation targets
+            n_epochs: Number of epochs
+            batch_size: Size of mini-batches
+            alpha: Learning rate
+            plot: Whether to plot training curves
+        """
+        t_train = make_onehot(t_train.astype(int), total=self.num_classes)
+        if t_valid is not None:
+            t_valid = make_onehot(t_valid.astype(int), total=self.num_classes)
+        return train_sgd(
+            self, 
+            X_train=X_train,
+            t_train=t_train,
+            X_valid=X_valid,
+            t_valid=t_valid,
+            n_epochs=n_epochs,
+            batch_size=batch_size,
+            alpha=alpha,
+            plot=plot
+        )
+
 def train_mlp():
     X_train, y_train, X_test, y_test, X_valid, y_valid = load_mlp_features()
     model = GameContextMLP(num_features=X_train.shape[1])

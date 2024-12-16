@@ -2,10 +2,10 @@ import torch
 import numpy as np
 import torch.nn as nn
 
-class OffensiveCoordinator(nn.Module):
+class OffensiveCoordinatorRNN(nn.Module):
     def __init__(self, feature_size=8, num_players=11, sequence_size=10, 
                  hidden_size=128, num_layers=2, pretrained=False):
-        super(OffensiveCoordinator, self).__init__()
+        super(OffensiveCoordinatorRNN, self).__init__()
         
         self.num_players = num_players
         self.feature_size = feature_size
