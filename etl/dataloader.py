@@ -186,10 +186,10 @@ class CombinedExpertDataset(Dataset):
             self.targets.append(self.cnn_dataset.targets[cnn_idx])
         
         # Convert to tensors if not already
-        self.cnn_features = torch.tensor(self.cnn_features)
-        self.mlp_features = torch.tensor(self.mlp_features)
-        self.rnn_features = torch.tensor(self.rnn_features)
-        self.targets = torch.FloatTensor(self.targets)
+        self.cnn_features = torch.tensor(self.cnn_features, dtype=torch.float32) / 255.0  # normalize to [0,1]
+        self.mlp_features = torch.tensor(self.mlp_features, dtype=torch.float32)
+        self.rnn_features = torch.tensor(self.rnn_features, dtype=torch.float32)
+        self.targets = torch.FloatTensor(self.targets).unsqueeze(1)
         
     def __len__(self):
         return len(self.valid_keys)
