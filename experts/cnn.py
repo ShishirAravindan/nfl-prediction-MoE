@@ -63,7 +63,7 @@ class FormationExpertCNN(nn.Module):
     def load_pretrained(self):
         checkpoint = torch.load(f'../checkpoints/CNNmodel.pth')
         self.load_state_dict(checkpoint)
-        self.eval()
+        # self.eval()
         for param in self.parameters():
             param.requires_grad = False
 
