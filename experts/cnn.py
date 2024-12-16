@@ -1,24 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
-
-def train_model(model, num_epochs, train_dataset, learning_rate):
-    criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    # Training loop
-    for epoch in range(num_epochs):
-        for i, (images, labels) in enumerate(train_loader):
-            # Forward pass
-            images = images.permute(0, 3, 1, 2)
-            outputs = model(images)
-            loss = criterion(outputs, labels.unsqueeze(1))
-
-            # Backward and optimize
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+from torch.utils.data import DataLoader, TensorDataset
 
 class FormationExpertCNN(nn.Module):
     def __init__(self, input_channels=4, input_height=158, input_width=300, pretrained=False):
@@ -83,3 +66,79 @@ class FormationExpertCNN(nn.Module):
         self.eval()
         for param in self.parameters():
             param.requires_grad = False
+
+    def train(self, X_train, y_train, X_val=None, y_val=None, num_epochs=50, 
+              batch_size=32, alpha=0.001):
+        
+        # Convert numpy arrays to torch tensors
+        X_train = torch.FloatTensor(X_train)
+        y_train = torch.FloatTensor(y_train)
+    
+        # Create dataloader
+        train_dataset = TensorDataset(X_train, y_train)
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+        # Loss function and optimizer
+        criterion = nn.BCELoss()
+        optimizer = optim.Adam(self.parameters(), lr=alpha)
+        
+        # Training metrics
+        train_losses = []
+        train_accuracies = []
+        val_losses = []
+        val_accuracies = []
+
+        for epoch in range(num_epochs):
+            epoch_loss = 0
+            correct_preds = 0
+            total_preds = 0
+
+            for _, (images, labels) in enumerate(train_loader):
+                # forward pass
+                images = images.permute(0, 3, 1, 2)
+                outputs = self(images)
+                loss = criterion(outputs, labels.unsqueeze(1))
+                
+                # Calculate accuracy
+                predicted = (outputs > 0.5).float()
+                correct_preds += (predicted == labels.unsqueeze(1)).sum().item()
+                total_preds += labels.size(0)
+                
+                # backward pass and optimize
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+                epoch_loss += loss.item()
+
+            avg_train_loss = epoch_loss / len(train_loader)
+            train_accuracy = correct_preds / total_preds * 100
+            
+            train_losses.append(avg_train_loss)
+            train_accuracies.append(train_accuracy)
+            
+            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {avg_train_loss:.4f}, Accuracy: {train_accuracy:.2f}%')
+            
+            # Validation metrics, if provided
+            if X_val is not None and y_val is not None:
+                with torch.no_grad():
+                    X_val_tensor = torch.FloatTensor(X_val).permute(0, 3, 1, 2)
+                    val_outputs = self.forward(X_val_tensor)
+                    val_loss = criterion(val_outputs, torch.FloatTensor(y_val).unsqueeze(1))
+                    
+                    # Calculate validation accuracy
+                    val_predicted = (val_outputs > 0.5).float()
+                    val_correct = (val_predicted == torch.FloatTensor(y_val).unsqueeze(1)).sum().item()
+                    val_accuracy = val_correct / len(y_val) * 100
+                    
+                    val_losses.append(val_loss.item())
+                    val_accuracies.append(val_accuracy)
+                    
+                    print(f'Validation Loss: {val_loss.item():.4f}, Validation Accuracy: {val_accuracy:.2f}%')
+
+        return {
+            "train_losses": train_losses,
+            "train_accuracies": train_accuracies, 
+            "val_losses": val_losses,
+            "val_accuracies": val_accuracies
+        }
