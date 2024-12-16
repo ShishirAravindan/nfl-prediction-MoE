@@ -2,6 +2,26 @@
 
 This module handles the Extract, Transform, Load (ETL) pipeline for the NFL Big Data Bowl 2025 dataset, focusing on pass/rush prediction given pre-snap play data.
 
+## Quick Start with Pre-generated Features
+
+For quick experimentation, you can download pre-generated features from our Google Drive:
+1. Download features from [Google Drive](https://drive.google.com/drive/folders/13pSIpgwfowXHJcbAjYNnEJwuUUyNFTb-?usp=drive_link)
+2. Place the downloaded files in the `demo/features/` directory:
+   ```
+   demo/features/
+   ├── cnn_features.npy
+   ├── mlp_features.parquet
+   └── rnn_features.parquet
+   ```
+3. Use `dataloader.py` to load the features into a PyTorch dataset to train models.
+
+Alternatively, you can use the model checkpoints from the `checkpoints/` directory which contain pre-trained weights.
+
+---
+## Full Dataset Processing
+
+If you want to process the raw NFL data yourself, follow the instructions below:
+
 ## File Structure
 ```
 etl/
