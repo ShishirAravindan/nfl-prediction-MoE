@@ -1,16 +1,15 @@
 """
-- create a dataloader for each expert. 
-- Look at target.csv to generate a test train split based on (gameId, playId).
-- Use (gameId, playId) as key to find the corresponding features for each expert.
-    - CNN: see demo/features/cnn_features.npy which is a numpy array of shape (gameId, playId, CNN_features, target)
-        - CNN_features: an image
-    - MLP: see demo/features/mlp_features.parquet which is a pandas dataframe with columns (gameId, playId, MLP_features, target)
-        - MLP_features: a dataframe of 15 features
-    - RNN: see demo/features/rnn_features.parquet which is a pandas dataframe with columns (gameId, playId, RNN_features, target)
-        - RNN_features: a dataframe of _ features
-- the dataloader should take the expert name as argument to know which features to load
-- the get function should take the gameId, playId as argument to get the features
-- ideally three dataloaders should be created, one for each expert where the gameId, playId is the key.
+Dataloaders for expert models and combined dataset.
+
+This module provides dataset classes for:
+1. Individual expert models (CNN, MLP, RNN) via ExpertDataset
+2. Combined features across all experts via CombinedExpertDataset
+
+Key functionality:
+- Loads features from respective sources (npy/parquet files)
+- Handles key-based filtering (gameId, playId)
+- Ensures data consistency across experts
+- Converts features to appropriate tensor formats
 """
 
 import pandas as pd
@@ -24,7 +23,7 @@ class ExpertDataset(Dataset):
     def __init__(self, df, expert_name):
         self.expert_name = expert_name
         self.keys = df[['gameId', 'playId']].drop_duplicates().values
-        self.key_set = set(map(tuple, self.keys))
+        self._key_set = set(map(tuple, self.keys))
         self.targets = df['isPass'].values
         
         self.features = self.load_features() 
@@ -43,7 +42,7 @@ class ExpertDataset(Dataset):
         filtered_features = []
         valid_indices = []
         # For each key in our key_set
-        for idx, key in enumerate(self.key_set):
+        for idx, key in enumerate(self._key_set):
             # Find the matching row in cnn_features where gameId and playId match
             mask = (cnn_features[:, 0] == key[0]) & (cnn_features[:, 1] == key[1])
             matching_row = cnn_features[mask]
@@ -63,7 +62,7 @@ class ExpertDataset(Dataset):
         mlp_features = pd.read_parquet('../demo/features/mlp_features.parquet')
         filtered_features = []
         valid_indices = []
-        for idx, key in enumerate(self.key_set):
+        for idx, key in enumerate(self._key_set):
             mask = (mlp_features['gameId'] == key[0]) & (mlp_features['playId'] == key[1])
             matching_row = mlp_features[mask]
             if len(matching_row) > 0:
@@ -87,14 +86,14 @@ class ExpertDataset(Dataset):
         filtered_features = []
         valid_indices = []
         # For each key in our key_set
-        for idx, key in enumerate(self.key_set):
+        for idx, key in enumerate(self._key_set):
             # Find the matching row in rnn_features where gameId and playId match
             mask = (rnn_features['gameId'] == key[0]) & (rnn_features['playId'] == key[1])
             matching_row = rnn_features[mask]
             
             if len(matching_row) > 0:
-                # Get the sequence features (x, y, s, a, dis, o, dir, timeToSnap)
-                feature_names = ["x", "y", "s", "a", "dis", "o", "dir", "timeToSnap"]
+                # get the features
+                feature_names = ["relative_x", "relative_y", "s", "a", "dis", "o", "dir"]
                 sequence_features = []
                 for feature_name in feature_names:
                     feature_data = matching_row[feature_name].values[0]
@@ -136,3 +135,72 @@ class ExpertDataset(Dataset):
         target = torch.FloatTensor([target])
         
         return feature, target
+
+class CombinedExpertDataset(Dataset):
+    """Dataset combining features from all experts.
+    
+    Only includes samples that have valid features across all experts.
+    
+    Attributes:
+        keys (list): List of (gameId, playId) tuples valid for all experts
+        cnn_features (torch.Tensor): Features for CNN expert
+        mlp_features (torch.Tensor): Features for MLP expert
+        rnn_features (torch.Tensor): Features for RNN expert
+        targets (torch.Tensor): Binary target values
+    """
+
+    def __init__(self, df):
+        """
+        Dataset that combines inputs for all experts while preserving keys
+        Args:
+            df: DataFrame containing all features
+        """
+        # Create individual expert datasets
+        self.cnn_dataset = ExpertDataset(df, expert_name="cnn")
+        self.mlp_dataset = ExpertDataset(df, expert_name="mlp")
+        self.rnn_dataset = ExpertDataset(df, expert_name="rnn")
+        
+        # Get intersection of valid keys across all experts
+        cnn_keys = set([tuple(key) for key in self.cnn_dataset.keys])
+        mlp_keys = set([tuple(key) for key in self.mlp_dataset.keys])
+        rnn_keys = set([tuple(key) for key in self.rnn_dataset.keys])
+        
+        # Only keep keys that exist in all experts
+        self.valid_keys = sorted(list(cnn_keys.intersection(mlp_keys, rnn_keys)))
+        
+        # Filter features and targets for each expert to only include valid keys
+        self.cnn_features = []
+        self.mlp_features = []
+        self.rnn_features = []
+        self.targets = []
+        
+        # Create filtered datasets using only valid keys
+        for key in self.valid_keys:
+            cnn_idx = np.where((self.cnn_dataset.keys == np.array(key)).all(axis=1))[0][0]
+            mlp_idx = np.where((self.mlp_dataset.keys == np.array(key)).all(axis=1))[0][0]
+            rnn_idx = np.where((self.rnn_dataset.keys == np.array(key)).all(axis=1))[0][0]
+            
+            self.cnn_features.append(self.cnn_dataset.features[cnn_idx])
+            self.mlp_features.append(self.mlp_dataset.features[mlp_idx])
+            self.rnn_features.append(self.rnn_dataset.features[rnn_idx])
+            self.targets.append(self.cnn_dataset.targets[cnn_idx])
+        
+        # Convert to tensors if not already
+        self.cnn_features = torch.tensor(self.cnn_features)
+        self.mlp_features = torch.tensor(self.mlp_features)
+        self.rnn_features = torch.tensor(self.rnn_features)
+        self.targets = torch.FloatTensor(self.targets)
+        
+    def __len__(self):
+        return len(self.valid_keys)
+    
+    def __getitem__(self, idx):
+        key = self.valid_keys[idx]
+        
+        batch_data = {
+            'cnn': self.cnn_features[idx],
+            'mlp': self.mlp_features[idx],
+            'rnn': self.rnn_features[idx]
+        }
+        
+        return key, batch_data, self.targets[idx]
