@@ -12,20 +12,22 @@ etl/
 ├── transform_cnn.py
 ├── transform_mlp.py
 └── transform_rnn.py
+└── dataloader.py
 ```
 
 ## Module Structure
 
-### Data Extraction (`extract.md`)
+### Extract
+**Data Extraction (`extract.md`)**
 - Instructions for downloading the NFL dataset from Kaggle
 
-### Configuration (`config.py`)
+**Configuration (`config.py`)**
 - Defines global constants and paths
 - Contains dataset file locations and team color mappings
 - Configures project-wide settings
 
-
-### Feature Engineering (`feature-engineering-utils.py`)
+### Transform
+**Feature Engineering (`feature-engineering-utils.py`)**
 Core utilities for data preprocessing:
 - `get_offensive_plays()`: Filters for offensive frames
 - `create_timeToSnap_column()`: Computes time-to-snap metrics
@@ -34,22 +36,24 @@ Core utilities for data preprocessing:
 - `remove_small_plays()`: Filters out plays with insufficient frames
 - `get_ten_frames()`: Standardizes frame count per play
 
-### Transformation Pipelines
-
-#### CNN Pipeline (`transform_cnn.py`)
+**CNN Pipeline (`transform_cnn.py`)**
 Handles formation image generation:
 - Converts play data into visual representations
 - Generates standardized formation images for CNN input
 
-#### MLP Pipeline (`transform_mlp.py`)
+**MLP Pipeline (`transform_mlp.py`)**
 Processes tabular features for MLP model:
 - Performs feature selection and handles categorical encoding
 
-#### RNN Pipeline (`transform_rnn.py`)
+**RNN Pipeline (`transform_rnn.py`)**
 Processes sequential data for RNN model:
 - Implements feature engineering pipeline
 - Converts play sequences into tensor format
 - Handles multi-feature temporal data
+
+### Load
+**Data Loader (`dataloader.py`)**
+- Creates datasets for each expert model
 
 ## Usage
 
@@ -60,5 +64,9 @@ Processes sequential data for RNN model:
 ## Data Flow
 
 ```
-Raw Data → transformation pipeline → Model-Specific Training Data
+Raw Data → transformation pipeline → Model-Specific Training Dataset
 ```
+
+## Next Steps
+- See demos on how experts are trained (and loaded if pretrained)
+- See how MoE is trained
