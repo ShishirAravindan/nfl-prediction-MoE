@@ -47,10 +47,15 @@ This project analyzes NFL Big Data Bowl 2025 data using three expert models (CNN
 
 ## Results
 
-![Expert Weights Over Time](demo/moe_100epochs.png)
+<div style="text-align: center;">
+    <img src="demo/moe_100epochs.png" alt="expert weights over time" width="600"/>
+</div>
 The figure above shows the training loss and accuracy of the MoE model over 100 epochs where the gating network is initialized with random weights and no L1 regularization. The model doesn't seem to learn until the 75th epoch. To rectify this, we can initialize the gating network to assign equal weights to the experts and use L1 regularization to encourage sparsity in the gating network.
 
 ---
 
-![Combined Model Accuracy](demo/MoE_acc.png)
+<div style="text-align: center;">
+    <img src="demo/MoE_acc.png" alt="Combined Model Accuracy" width="400"/>
+</div>
+
 The above plot illustrates the even when sparsity is encouraged in the MoE model, the model will converge to the best performing expert. This is because the gating network is not able to learn to weight the experts properly.
