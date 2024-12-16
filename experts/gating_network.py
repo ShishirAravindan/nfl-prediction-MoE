@@ -20,6 +20,14 @@ class GatingNetwork(nn.Module):
             nn.Softmax(dim=1)  # Ensures weights sum to 1
         )
 
+        self._initialize_uniform_weights()
+
+    def _initialize_uniform_weights(self):
+        # Initialize weights to be equal
+        final_layer = self.network[-2]
+        nn.init.zeros_(final_layer.weight)
+        nn.init.zeros_(final_layer.bias)
+
     def forward(self, expert_predictions):
         """
         Combines predictions from multiple experts using learned weights
