@@ -27,7 +27,7 @@ class GameContextMLP(nn.Module):
         return self.layers(x)
 
     def load_pretrained(self):
-        checkpoint = torch.load('../checkpoints/game_context.pth')
+        checkpoint = torch.load('../checkpoints/MLPmodel.pth')
         self.load_state_dict(checkpoint)
         # self.eval()
         for param in self.parameters():

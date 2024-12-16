@@ -5,7 +5,7 @@ import torch.optim as optim
 
 class OffensiveCoordinatorRNN(nn.Module):
     def __init__(self, feature_size=7, num_players=11, sequence_size=10,
-                 hidden_size=128, num_layers=2):
+                 hidden_size=128, num_layers=2, pretrained=False):
         super(OffensiveCoordinatorRNN, self).__init__()
 
         self.num_players = num_players
@@ -25,6 +25,16 @@ class OffensiveCoordinatorRNN(nn.Module):
 
         # Output layer for binary classification
         self.output_layer = nn.Linear(hidden_size, 1)
+
+        if pretrained:
+            self.load_pretrained()
+
+    def load_pretrained(self):
+        checkpoint = torch.load(f'../checkpoints/RNNmodel.pth')
+        self.load_state_dict(checkpoint)
+        # self.eval()
+        for param in self.parameters():
+            param.requires_grad = False
 
     def forward(self, X):
         """
